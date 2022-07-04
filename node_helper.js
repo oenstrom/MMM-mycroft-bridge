@@ -19,10 +19,42 @@
 
 var NodeHelper = require("node_helper");
 
+var WebSocketClient = require("websocket").client;
+
 module.exports = NodeHelper.create({
+  messageParser: {
+    events: {},
+    onEvent: function(eventName, cb) {
+      this.events[eventName] = cb;
+    },
+    parse: function(message) {
+      let msg = JSON.parse(message.utf8Data)
+      if (this.events.hasOwnProperty(msg.type)) {
+        this.events[msg.type](msg.data);
+      }
+    }
+  },
+
   // Setup routes for MyCroft or other external software to use.
   start: function() {
     var self = this;
+    this.ws = new WebSocketClient();
+    this.ws.on("connect", function(connection) {
+      console.log("WebSocket Client connected");
+      connection.on("error", function(error) {
+        console.log("Connection Error: " + error.toString());
+      });
+      connection.on("close", function() {
+        console.log("Connection Closed");
+      });
+      self.messageParser.onEvent("speak", (data) => console.log(data));
+      connection.on("message", (message) => self.messageParser.parse(message));
+
+      // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
+    });
+    this.ws.connect("ws://localhost:8181/core");
+
+    // console.log(this.ws);
     
     this.expressApp.post("/MMM-mycroft-bridge/list", function(req, res) {
       // TODO: Fix req body json
@@ -54,7 +86,7 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function(notification, payload) {
     if (notification === "INIT") {
       // self.config.apiKey = payload
-      console.log("INIT NOTIFICATION!");
+      console.log("INIT");
     }
   },
 

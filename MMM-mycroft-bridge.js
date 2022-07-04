@@ -27,7 +27,9 @@ Module.register("MMM-mycroft-bridge", {
   // },
 
   // getScripts: function () {
-  //   return [];
+  //   return [
+  //     this.file("../node_modules/socket.io/client-dist/socket.io.min.js")
+  //   ];
   // },
 
   // getStyles: function() {
@@ -43,7 +45,6 @@ Module.register("MMM-mycroft-bridge", {
 
   start: function () {
     var self = this;
-    this.contacts = [];
     self.sendSocketNotification("INIT", {}); // Here we can pass config to the node_helper if needed.
   },
 
