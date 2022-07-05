@@ -22,15 +22,21 @@ var NodeHelper = require("node_helper");
 var WebSocketClient = require("websocket").client;
 
 module.exports = NodeHelper.create({
+  timerId: null,
+
+
   Message: {
     events: {},
     onEvent: function(eventName, cb) {
       this.events[eventName] = cb;
     },
-    parse: function(message) {
+    parse: function(that, message) {
       let msg = JSON.parse(message.utf8Data)
       if (this.events.hasOwnProperty(msg.type)) {
         this.events[msg.type](msg.data);
+        clearTimeout(that.timerId);
+        console.log("TIMEOUT CLEARED!!!!");
+        that.timerId = setTimeout(() => that.sendSocketNotification("MYCROFT_HIDE"), 10000);
       }
     }
   },
@@ -38,38 +44,33 @@ module.exports = NodeHelper.create({
   // Setup routes for MyCroft or other external software to use.
   start: function() {
     var self = this;
+    this.timerId = null;
     this.ws = new WebSocketClient();
     this.ws.on("connect", function(connection) {
       console.log("WebSocket Client connected");
 
       connection.on("error", err => console.log("Error connecting to MyCroft: " + error.toString()));
       connection.on("close", () => console.log("Connection Closed"));
-      connection.on("message", msg => self.Message.parse(msg));
+      connection.on("message", msg => self.Message.parse(self, msg));
+      // connection.on("message", msg => console.log(msg));
       
-      self.Message.onEvent("speak", data => console.log(data));
-      self.Message.onEvent("recognizer_loop:wakeword", data => self.sendSocketNotification("MYCROFT_WAKEWORD"));
-      self.Message.onEvent("recognizer_loop:utterance", data => console.log(data));
+      self.Message.onEvent("speak", data => self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
+      self.Message.onEvent("recognizer_loop:wakeword", data => self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
+      // self.Message.onEvent("recognizer_loop:utterance", data => console.log(data));
+      self.Message.onEvent("MMM_DISPLAY_CONTACTS", data => {console.log(data);self.sendSocketNotification("MMM_DISPLAY_CONTACTS", data)});
+      self.Message.onEvent("recognizer_loop:audio_output_end", data => {
+        clearTimeout(self.timerId);
+        self.timerId = setTimeout(() => self.sendSocketNotification("MYCROFT_HIDE"), 3000);
+      });
 
       // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
     });
     this.ws.connect("ws://localhost:8181/core");
 
     
-    this.expressApp.post("/MMM-mycroft-bridge/list", function(req, res) {
-      // TODO: Fix req body json
-      self.sendSocketNotification("MMM-mycroft-bridge-LIST-ALL", {contacts: req.body.contacts})
-      res.status(200).json({"success": true});
-    });
-
-    // this.expressApp.post("/MMM-contacts/add", function(req, res) {
-    //   res.status(200).json({"success": true});
-    // });
-
-    // this.expressApp.get("/MMM-contacts/get", function(req, res) {
-    //   res.status(200).json({"contact": {}});
-    // });
-
-    // this.expressApp.delete("/MMM-contacts/delete", function(req, res) {
+    // this.expressApp.post("/MMM-mycroft-bridge/list", function(req, res) {
+    //   // TODO: Fix req body json
+    //   self.sendSocketNotification("MMM-mycroft-bridge-LIST-ALL", {contacts: req.body.contacts})
     //   res.status(200).json({"success": true});
     // });
   },
@@ -89,11 +90,11 @@ module.exports = NodeHelper.create({
     }
   },
 
-  sendStart: function(recipient) {
-    this.sendSocketNotification("", {recipient});
-  },
+  // sendStart: function(recipient) {
+  //   this.sendSocketNotification("", {recipient});
+  // },
 
-  sendDispose: function() {
-    this.sendSocketNotification("", {});
-  }
+  // sendDispose: function() {
+  //   this.sendSocketNotification("", {});
+  // }
 });

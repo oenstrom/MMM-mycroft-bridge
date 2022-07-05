@@ -27,12 +27,6 @@ Module.register("MMM-mycroft-bridge", {
     maxMessages: 3
   },
 
-  // getScripts: function () {
-  //   return [
-  //     this.file("../node_modules/socket.io/client-dist/socket.io.min.js")
-  //   ];
-  // },
-
   getStyles: function() {
     return [this.file("style.css")];
   },
@@ -64,15 +58,24 @@ Module.register("MMM-mycroft-bridge", {
 
   // socketNotificationReceived from node_helper
   socketNotificationReceived: function (notification, payload) {
-    if (notification === "MYCROFT_WAKEWORD") {
-      if (this.messages.unshift(this.translate("LISTENING")) > this.config.maxMessages) {
+    if (notification.startsWith("MYCROFT_MSG_")) {
+      this.show();
+      if (this.messages.unshift(payload.translate ? this.translate(payload.translate) : payload.text) > this.config.maxMessages) {
         this.messages.pop();
       }
       this.updateDom(0);
-    } else if (notification === "MMM-mycroft-bridge-GET") {
-      // Get a single contact
-    } else if (notification === "MMM-mycroft-bridge-ADD") {
-      // Add a user
+    }
+    if (notification === "MYCROFT_MSG_WAKEWORD") {
+      // this.show();
+      // if (this.messages.unshift(this.translate("WAKEWORD")) > this.config.maxMessages) {
+      //   this.messages.pop();
+      // }
+      // this.updateDom(0);
+    } else if (notification === "MYCROFT_HIDE") {
+      this.hide(800);
+    } else if (notification === "MMM_DISPLAY_CONTACTS") {
+      console.log(payload);
+      this.sendNotification("MMM_DISPLAY_CONTACTS", payload);
     } else if (notification === "MMM-mycroft-bridge-DELETE") {
       // Delete a user
     }
@@ -81,9 +84,14 @@ Module.register("MMM-mycroft-bridge", {
   getDom: function () {
     var self = this;
     let wrapper = document.createElement("div");
-    let h1 = document.createElement("h1");
-    h1.append(self.translate("MYCROFT"));
-    wrapper.appendChild(h1);
+    let img = document.createElement("img");
+    img.src = this.file("wakeword.png");
+    img.height = 128;
+    img.width = 128;
+    wrapper.appendChild(img);
+    // let h1 = document.createElement("h1");
+    // h1.append(self.translate("MYCROFT"));
+    // wrapper.appendChild(h1);
     let ul = document.createElement("ul");
     ul.className = "messages";
     ul.style.height = this.messages.length < 3 ? "85px" : (this.messages.length*35) + "px";
