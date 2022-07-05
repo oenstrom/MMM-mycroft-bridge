@@ -1,0 +1,13 @@
+.module.MMM-mycroft-bridge {
+  
+}
+.module.MMM-mycroft-bridge .module-content .messages {
+  list-style: none;
+  padding: 0;
+  height: 100px;
+  mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+}
+.module.MMM-mycroft-bridge .module-content .messages li:first-child {
+  padding-bottom: 15px;
+}

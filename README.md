@@ -8,6 +8,9 @@ Navigate to the `modules` folder and clone the repository:
 
 `git clone git@github.com:oenstrom/MMM-mycroft-bridge.git`
 
+## Dependencies
+`npm install websocket`
+
 ## Configuration
 
 Navigate to the `config/config.js` file and add a new entry in `modules` (see [MagicMirror Module Configuration documentation](https://docs.magicmirror.builders/modules/configuration.html)).

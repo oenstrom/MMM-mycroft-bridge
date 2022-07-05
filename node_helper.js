@@ -22,7 +22,7 @@ var NodeHelper = require("node_helper");
 var WebSocketClient = require("websocket").client;
 
 module.exports = NodeHelper.create({
-  messageParser: {
+  Message: {
     events: {},
     onEvent: function(eventName, cb) {
       this.events[eventName] = cb;
@@ -41,20 +41,19 @@ module.exports = NodeHelper.create({
     this.ws = new WebSocketClient();
     this.ws.on("connect", function(connection) {
       console.log("WebSocket Client connected");
-      connection.on("error", function(error) {
-        console.log("Connection Error: " + error.toString());
-      });
-      connection.on("close", function() {
-        console.log("Connection Closed");
-      });
-      self.messageParser.onEvent("speak", (data) => console.log(data));
-      connection.on("message", (message) => self.messageParser.parse(message));
+
+      connection.on("error", err => console.log("Error connecting to MyCroft: " + error.toString()));
+      connection.on("close", () => console.log("Connection Closed"));
+      connection.on("message", msg => self.Message.parse(msg));
+      
+      self.Message.onEvent("speak", data => console.log(data));
+      self.Message.onEvent("recognizer_loop:wakeword", data => self.sendSocketNotification("MYCROFT_WAKEWORD"));
+      self.Message.onEvent("recognizer_loop:utterance", data => console.log(data));
 
       // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
     });
     this.ws.connect("ws://localhost:8181/core");
 
-    // console.log(this.ws);
     
     this.expressApp.post("/MMM-mycroft-bridge/list", function(req, res) {
       // TODO: Fix req body json

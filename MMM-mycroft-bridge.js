@@ -23,8 +23,9 @@
 Module.register("MMM-mycroft-bridge", {
   requiresVersion: "2.1.0", // Required version of MagicMirror
 
-  // defaults: {
-  // },
+  defaults: {
+    maxMessages: 3
+  },
 
   // getScripts: function () {
   //   return [
@@ -32,9 +33,9 @@ Module.register("MMM-mycroft-bridge", {
   //   ];
   // },
 
-  // getStyles: function() {
-  //   return [];
-  // },
+  getStyles: function() {
+    return [this.file("style.css")];
+  },
 
   getTranslations: function() {
     return {
@@ -45,6 +46,7 @@ Module.register("MMM-mycroft-bridge", {
 
   start: function () {
     var self = this;
+    this.messages = [];
     self.sendSocketNotification("INIT", {}); // Here we can pass config to the node_helper if needed.
   },
 
@@ -62,8 +64,10 @@ Module.register("MMM-mycroft-bridge", {
 
   // socketNotificationReceived from node_helper
   socketNotificationReceived: function (notification, payload) {
-    if (notification === "MMM-mycroft-bridge-LIST-ALL") {
-      this.contacts = payload.contacts;
+    if (notification === "MYCROFT_WAKEWORD") {
+      if (this.messages.unshift(this.translate("LISTENING")) > this.config.maxMessages) {
+        this.messages.pop();
+      }
       this.updateDom(0);
     } else if (notification === "MMM-mycroft-bridge-GET") {
       // Get a single contact
@@ -77,7 +81,19 @@ Module.register("MMM-mycroft-bridge", {
   getDom: function () {
     var self = this;
     let wrapper = document.createElement("div");
-    wrapper.innerHTML = self.translate("MYCROFT");
+    let h1 = document.createElement("h1");
+    h1.append(self.translate("MYCROFT"));
+    wrapper.appendChild(h1);
+    let ul = document.createElement("ul");
+    ul.className = "messages";
+    ul.style.height = this.messages.length < 3 ? "85px" : (this.messages.length*35) + "px";
+    this.messages.forEach(msg => {
+      let li = document.createElement("li");
+      li.className = "normal dimmed";
+      li.innerText = msg;
+      ul.appendChild(li);
+    });
+    wrapper.appendChild(ul);
     return wrapper;
   },
 });
