@@ -1,5 +1,5 @@
 /* Magic Mirror
- * Node Helper: MMM-contacts
+ * Node Helper: MMM-mycroft-bridge
  *
  * By Olof Enström
  * 

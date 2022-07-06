@@ -1,4 +1,4 @@
-# MMM-contacts
+# MMM-mycroft-bridge
 
 A [MagicMirror](https://magicmirror.builders/) module to bridge between MagicMirror and MyCroft.
 
