@@ -24,39 +24,20 @@ Module.register("MMM-mycroft-bridge", {
   requiresVersion: "2.1.0", // Required version of MagicMirror
 
   defaults: {
-    maxMessages: 3
+    maxMessages: 3,
+    mycroftPath: "ws://localhost:8181/core",
   },
-
-  getStyles: function() {
-    return [this.file("style.css")];
-  },
-
-  getTranslations: function() {
-    return {
-      en: "translations/en.json",
-      sv: "translations/sv.json"
-    };
-  },
-
-  start: function () {
-    var self = this;
+  
+  start: function() {
     this.messages = [];
-    self.sendSocketNotification("INIT", {}); // Here we can pass config to the node_helper if needed.
+    this.sendSocketNotification("INIT", {mycroftPath: this.config.mycroftPath});
   },
 
-  notificationReceived: function (notification, payload, sender) {
-    if (notification === "MMM-mycroft-bridge-LIST") {
-      // Get all contacts
-    } else if (notification === "MMM-mycroft-bridge-GET") {
-      // Get a single contact
-    } else if (notification === "MMM-mycroft-bridge-ADD") {
-      // Add a user
-    } else if (notification === "MMM-mycroft-bridge-DELETE") {
-      // Delete a user
-    }
-  },
-
-  // socketNotificationReceived from node_helper
+  /**
+   * A socket notification is received. 
+   * @param {string} notification The notification name 
+   * @param {*} payload The data sent
+   */
   socketNotificationReceived: function (notification, payload) {
     if (notification.startsWith("MYCROFT_MSG_")) {
       this.show();
@@ -65,19 +46,15 @@ Module.register("MMM-mycroft-bridge", {
       }
       this.updateDom(0);
     }
-    if (notification === "MYCROFT_MSG_WAKEWORD") {
-      // this.show();
-      // if (this.messages.unshift(this.translate("WAKEWORD")) > this.config.maxMessages) {
-      //   this.messages.pop();
-      // }
-      // this.updateDom(0);
-    } else if (notification === "MYCROFT_HIDE") {
-      this.hide(800);
-    } else if (notification === "MMM_DISPLAY_CONTACTS") {
-      console.log(payload);
-      this.sendNotification("MMM_DISPLAY_CONTACTS", payload);
-    } else if (notification === "MMM-mycroft-bridge-DELETE") {
-      // Delete a user
+    switch (notification) {
+      case "MYCROFT_MSG_WAKEWORD":
+        break;
+
+      case "MYCROFT_HIDE":
+        this.hide(800);
+        break;
+
+      default: break;
     }
   },
 
@@ -86,12 +63,9 @@ Module.register("MMM-mycroft-bridge", {
     let wrapper = document.createElement("div");
     let img = document.createElement("img");
     img.src = this.file("wakeword.png");
-    img.height = 128;
-    img.width = 128;
+    img.style.height = "128px";
+    img.style.width = "128px";
     wrapper.appendChild(img);
-    // let h1 = document.createElement("h1");
-    // h1.append(self.translate("MYCROFT"));
-    // wrapper.appendChild(h1);
     let ul = document.createElement("ul");
     ul.className = "messages";
     ul.style.height = this.messages.length < 3 ? "85px" : (this.messages.length*35) + "px";
@@ -103,5 +77,16 @@ Module.register("MMM-mycroft-bridge", {
     });
     wrapper.appendChild(ul);
     return wrapper;
+  },
+
+  getStyles: function() {
+    return [this.file("style.css")];
+  },
+
+  getTranslations: function() {
+    return {
+      en: "translations/en.json",
+      sv: "translations/sv.json"
+    };
   },
 });

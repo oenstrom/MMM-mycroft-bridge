@@ -22,79 +22,81 @@ var NodeHelper = require("node_helper");
 var WebSocketClient = require("websocket").client;
 
 module.exports = NodeHelper.create({
-  timerId: null,
-
+  start: function() {
+    const self = this;
+    self.config = {};
+    self.timerId = null;
+  },
 
   Message: {
     events: {},
+
+    /**
+     * Add the event to accepted events with a callback to be executed when a matching event is found.
+     * @param {string} eventName The accepted event name
+     * @param {function} cb The callback to be executed
+     */
     onEvent: function(eventName, cb) {
       this.events[eventName] = cb;
     },
+
+    /**
+     * Parse the Mycroft message and relay it or execute the matching callback function.
+     * @param {NodeHelper} that The node_helper instance
+     * @param {mycroft.messagebus.Message} message The mycroft message
+     */
     parse: function(that, message) {
       let msg = JSON.parse(message.utf8Data)
-      if (this.events.hasOwnProperty(msg.type)) {
+
+      if (msg.type.startsWith("RELAY:")) {
+        const [_, nsps, notification] = msg.type.split(":", 3);
+        nsps === "*"
+          ? that.io._nsps.forEach(n => that.io.of(n.name).emit(notification, msg.data))
+          : that.io.of(nsps).emit(notification, msg.data);
+
+      } else if (this.events.hasOwnProperty(msg.type)) {
         this.events[msg.type](msg.data);
         clearTimeout(that.timerId);
-        console.log("TIMEOUT CLEARED!!!!");
         that.timerId = setTimeout(() => that.sendSocketNotification("MYCROFT_HIDE"), 10000);
       }
     }
   },
+  
+  /**
+   * Connect to Mycrofts messagebus and set up events for displaying Mycroft on the mirror.
+   */
+  connectMycroft: function() {
+    const self = this;
 
-  // Setup routes for MyCroft or other external software to use.
-  start: function() {
-    var self = this;
-    this.timerId = null;
-    this.ws = new WebSocketClient();
-    this.ws.on("connect", function(connection) {
-      console.log("WebSocket Client connected");
-
-      connection.on("error", err => console.log("Error connecting to MyCroft: " + error.toString()));
-      connection.on("close", () => console.log("Connection Closed"));
+    self.ws = new WebSocketClient();  
+    self.ws.on("connect", function(connection) {
+      console.log("MagicMirror connected to Mycroft messagebus");
+      connection.on("error", err => console.log("Error connecting to Mycroft: " + err.toString()));
+      connection.on("close", () => console.log("Disonnected from Mycroft"));
       connection.on("message", msg => self.Message.parse(self, msg));
-      // connection.on("message", msg => console.log(msg));
       
-      self.Message.onEvent("speak", data => self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
-      self.Message.onEvent("recognizer_loop:wakeword", data => self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
-      // self.Message.onEvent("recognizer_loop:utterance", data => console.log(data));
-      self.Message.onEvent("MMM_DISPLAY_CONTACTS", data => {console.log(data);self.sendSocketNotification("MMM_DISPLAY_CONTACTS", data)});
-      self.Message.onEvent("recognizer_loop:audio_output_end", data => {
-        clearTimeout(self.timerId);
-        self.timerId = setTimeout(() => self.sendSocketNotification("MYCROFT_HIDE"), 3000);
-      });
-
+      self.Message.onEvent("speak", data =>
+        self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
+  
+        self.Message.onEvent("recognizer_loop:wakeword", data =>
+          self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
+  
       // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
     });
-    this.ws.connect("ws://localhost:8181/core");
-
-    
-    // this.expressApp.post("/MMM-mycroft-bridge/list", function(req, res) {
-    //   // TODO: Fix req body json
-    //   self.sendSocketNotification("MMM-mycroft-bridge-LIST-ALL", {contacts: req.body.contacts})
-    //   res.status(200).json({"success": true});
-    // });
+    self.ws.connect(self.config.mycroftPath);
   },
 
-  // Override socketNotificationReceived method.
-
-  /* socketNotificationReceived(notification, payload)
-    * This method is called when a socket notification arrives.
-    *
-    * argument notification string - The identifier of the notification.
-    * argument payload mixed - The payload of the notification.
-    */
+  /**
+   * A socket notification is received. 
+   * @param {string} notification The notification name 
+   * @param {*} payload The data sent
+   */
   socketNotificationReceived: function(notification, payload) {
+    const self = this;
+  
     if (notification === "INIT") {
-      // self.config.apiKey = payload
-      console.log("INIT");
+      self.config.mycroftPath = payload.mycroftPath;
+      self.connectMycroft();
     }
   },
-
-  // sendStart: function(recipient) {
-  //   this.sendSocketNotification("", {recipient});
-  // },
-
-  // sendDispose: function() {
-  //   this.sendSocketNotification("", {});
-  // }
 });
