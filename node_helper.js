@@ -100,12 +100,10 @@ module.exports = NodeHelper.create({
   
     self.Message.onEvent("recognizer_loop:wakeword", _ =>
       self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
-    
-    // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
   },
 
   /**
-   * A socket notification is received. 
+   * A socket notification is received.
    * @param {string} notification The notification name 
    * @param {*} payload The data sent
    */
@@ -115,6 +113,8 @@ module.exports = NodeHelper.create({
     if (notification === "INIT") {
       self.config.mycroftPath = payload.mycroftPath;
       self.connectMycroft();
+    } else if (notification === "MYCROFT_COMMAND") {
+      self.connection.send(`{"type": "${payload.eventName}", "data": ${JSON.stringify(payload.data)}}`);
     }
   },
 });

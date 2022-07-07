@@ -58,6 +58,19 @@ Module.register("MMM-mycroft-bridge", {
     }
   },
 
+  /**
+   * Notification recevied from some other module.
+   * @param {string} notification The notification identifier.
+   * @param {*} payload The sent payload
+   * @param {Module} sender The sender
+   */
+  notificationReceived: function(notification, payload, sender) {
+    const self = this;
+    if (notification === "MYCROFT_COMMAND") {
+      self.sendSocketNotification(notification, payload);
+    }
+  },
+
   getDom: function () {
     var self = this;
     let wrapper = document.createElement("div");

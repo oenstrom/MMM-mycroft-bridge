@@ -51,4 +51,17 @@ socketNotificationReceived: function (notification, payload) {
 }
 ```
 
+## Sending data to Mycroft
+To send data from your module to Mycroft you must send a notification using `this.sendNotification(notification, payload)`. The `notification` has to be the string `MYCROFT_COMMAND` and the payload has to be an object containing the keys `eventName` and `data`.
+
+The `eventName` has to be a string. This string should match a Mycroft Message Type ([https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mycroft-core/message-types](https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mycroft-core/message-types)) or a custom one that you have subscribed to in your Mycroft skill. The `data` has to be an object containing the data you want to send. `JSON.stringify()` will be performed on the `data` object, so check your `data` object if your message isn't received properly.
+
+### Example:
+```js
+self.sendNotification("MYCROFT_COMMAND", {
+  eventName: "contacts-skill:delete_contact",
+  data: {name: self.selectedContact[0], email: self.selectedContact[1], phone: self.selectedContact[2]}
+});
+```
+
 ## More documentation to come
