@@ -26,6 +26,9 @@ module.exports = NodeHelper.create({
     const self = this;
     self.config = {};
     self.timerId = null;
+    self.reconnectId = null;
+    self.reconnectTime = 1000;
+    self.ws = new WebSocketClient();  
   },
 
   Message: {
@@ -63,27 +66,42 @@ module.exports = NodeHelper.create({
   },
   
   /**
-   * Connect to Mycrofts messagebus and set up events for displaying Mycroft on the mirror.
+   * Connect to Mycrofts messagebus.
    */
   connectMycroft: function() {
     const self = this;
 
-    self.ws = new WebSocketClient();  
-    self.ws.on("connect", function(connection) {
+    self.ws.on("connect", connection => {
+      self.connection = connection;
+      clearTimeout(self.reconnectId);
       console.log("MagicMirror connected to Mycroft messagebus");
-      connection.on("error", err => console.log("Error connecting to Mycroft: " + err.toString()));
-      connection.on("close", () => console.log("Disonnected from Mycroft"));
-      connection.on("message", msg => self.Message.parse(self, msg));
-      
-      self.Message.onEvent("speak", data =>
-        self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
-  
-        self.Message.onEvent("recognizer_loop:wakeword", data =>
-          self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
-  
-      // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
+      self.eventSetup();
+    });
+
+    self.ws.on("connectFailed", error => {
+      console.log("Could not connect to Mycroft messagebus. Reconnecting in " + self.reconnectTime + " ms");
+      self.reconnectId = setTimeout(() => self.ws.connect(self.config.mycroftPath), self.reconnectTime);
+      self.reconnectTime *= 2;
     });
     self.ws.connect(self.config.mycroftPath);
+  },
+  
+  /**
+   * Set up events for parsing messages and displaying Mycroft on the mirror.
+   */
+  eventSetup: function() {
+    const self = this;
+    self.connection.on("error", err    => console.log("Error connecting to Mycroft: " + err.toString()));
+    self.connection.on("close", ()     => { console.log("Disonnected from Mycroft"); self.ws.connect(self.config.mycroftPath); });
+    self.connection.on("message", msg  => self.Message.parse(self, msg));
+    
+    self.Message.onEvent("speak", data =>
+      self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
+  
+    self.Message.onEvent("recognizer_loop:wakeword", _ =>
+      self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
+    
+    // connection.send('{"type": "speak", "data": {"utterance": "Christoffer är bäst på allt!", "lang": "sv-se"}}');
   },
 
   /**
