@@ -76,6 +76,7 @@ module.exports = NodeHelper.create({
       clearTimeout(self.reconnectId);
       console.log("MagicMirror connected to Mycroft messagebus");
       self.eventSetup();
+      self.sendSocketNotification("MYCROFT_CONNECTED");
     });
 
     self.ws.on("connectFailed", error => {
@@ -91,9 +92,13 @@ module.exports = NodeHelper.create({
    */
   eventSetup: function() {
     const self = this;
-    self.connection.on("error", err    => console.log("Error connecting to Mycroft: " + err.toString()));
-    self.connection.on("close", ()     => { console.log("Disonnected from Mycroft"); self.ws.connect(self.config.mycroftPath); });
     self.connection.on("message", msg  => self.Message.parse(self, msg));
+    self.connection.on("error", err    => console.log("Error connecting to Mycroft: " + err.toString()));
+    self.connection.on("close", ()     => {
+      console.log("Disonnected from Mycroft");
+      self.sendSocketNotification("MYCROFT_DISCONNECTED");
+      self.ws.connect(self.config.mycroftPath);
+    });
     
     self.Message.onEvent("speak", data =>
       self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));

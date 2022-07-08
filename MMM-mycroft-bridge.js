@@ -39,6 +39,7 @@ Module.register("MMM-mycroft-bridge", {
    * @param {*} payload The data sent
    */
   socketNotificationReceived: function (notification, payload) {
+    const self = this;
     if (notification.startsWith("MYCROFT_MSG_")) {
       this.show();
       if (this.messages.unshift(payload.translate ? this.translate(payload.translate) : payload.text) > this.config.maxMessages) {
@@ -47,9 +48,12 @@ Module.register("MMM-mycroft-bridge", {
       this.updateDom(0);
     }
     switch (notification) {
-      case "MYCROFT_MSG_WAKEWORD":
+      case "MYCROFT_CONNECTED":
+        self.sendNotification(notification);
         break;
-
+      case "MYCROFT_DISCONNECTED":
+        self.sendNotification(notification);
+        break;
       case "MYCROFT_HIDE":
         this.hide(800);
         break;
