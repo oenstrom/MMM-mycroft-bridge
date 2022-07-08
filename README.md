@@ -51,6 +51,25 @@ socketNotificationReceived: function (notification, payload) {
 }
 ```
 
+## Status notifications
+The module currently sends two notifications about the connection status to mycroft:
+- `MYCROFT_CONNECTED`
+- `MYCROFT_DISCONNECTED`
+
+The `MYCROFT_CONNECTED` notification will be sent every time it connects to Mycroft, so usually only once at the start of the MagicMirror. It will resend it once it reconnects after a lost connection.
+
+The `MYCROFT_DISCONNECTED` notification will be sent if the module is disconnected from the Mycroft messagebus.
+
+Example, I want to retreive all contacts from Mycroft at the start:
+```js
+notificationReceived: function(notification, payload, sender) {
+  if (notification === "MYCROFT_CONNECTED") {
+    this.sendNotification("MYCROFT_COMMAND", {eventName: "contacts-skill:get_contacts", data: {sender: self.name}});
+  }
+}
+```
+So, I wait for the `MYCROFT_CONNECTED` notification before sending the initial command to get the contacts.
+
 ## Sending data to Mycroft
 To send data from your module to Mycroft you must send a notification using `this.sendNotification(notification, payload)`. The `notification` has to be the string `MYCROFT_COMMAND` and the payload has to be an object containing the keys `eventName` and `data`.
 
