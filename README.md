@@ -29,10 +29,12 @@ A possible configuration could be:
 },
 ```
 ## Config
-| Key           | Example                      | Description                       |
-|---------------|------------------------------|-----------------------------------|
-| `maxMessages` | `3`                          | The number of messages to display |
-| `mycroftPath` | `"ws://localhost:8181/core"` | The path to Mycroft messagebus    |
+| Key           | Example                      | Description                            |
+|---------------|------------------------------|----------------------------------------|
+| `maxMessages` | `3`                          | The number of messages to display      |
+| `hideTime`    | `15000`                      | Time in ms before hiding the module    |
+| `fadeTime`    | `500`                        | Time in ms it takes to fade the module |
+| `mycroftPath` | `"ws://localhost:8181/core"` | The path to Mycroft messagebus         |
 
 ## Relay messages from Mycroft to your MagicMirror module
 In the following example I'm relaying to the module `MMM-contacts` with the notification `LIST-ALL`. The data I'm sending is a list of contacts.

@@ -25,12 +25,14 @@ Module.register("MMM-mycroft-bridge", {
 
   defaults: {
     maxMessages: 3,
+    hideTime: 15000,
+    fadeTime: 500,
     mycroftPath: "ws://localhost:8181/core",
   },
   
   start: function() {
     this.messages = [];
-    this.sendSocketNotification("INIT", {mycroftPath: this.config.mycroftPath});
+    this.sendSocketNotification("INIT", {mycroftPath: this.config.mycroftPath, hideTime: this.config.hideTime});
   },
 
   /**
@@ -55,7 +57,7 @@ Module.register("MMM-mycroft-bridge", {
         self.sendNotification(notification);
         break;
       case "MYCROFT_HIDE":
-        this.hide(800);
+        this.hide(self.config.fadeTime);
         break;
 
       default: break;

@@ -60,7 +60,7 @@ module.exports = NodeHelper.create({
       } else if (this.events.hasOwnProperty(msg.type)) {
         this.events[msg.type](msg.data);
         clearTimeout(that.timerId);
-        that.timerId = setTimeout(() => that.sendSocketNotification("MYCROFT_HIDE"), 10000);
+        that.timerId = setTimeout(() => that.sendSocketNotification("MYCROFT_HIDE"), that.config.hideTime || 15000);
       }
     }
   },
@@ -99,7 +99,7 @@ module.exports = NodeHelper.create({
       self.sendSocketNotification("MYCROFT_DISCONNECTED");
       self.ws.connect(self.config.mycroftPath);
     });
-    
+
     self.Message.onEvent("speak", data =>
       self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
   
@@ -117,6 +117,7 @@ module.exports = NodeHelper.create({
   
     if (notification === "INIT") {
       self.config.mycroftPath = payload.mycroftPath;
+      self.config.hideTime = payload.hideTime;
       self.connectMycroft();
     } else if (notification === "MYCROFT_COMMAND") {
       self.connection.send(`{"type": "${payload.eventName}", "data": ${JSON.stringify(payload.data)}}`);
