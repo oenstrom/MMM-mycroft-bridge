@@ -85,4 +85,13 @@ self.sendNotification("MYCROFT_COMMAND", {
 });
 ```
 
+## Receiving data in Mycroft
+In Mycroft you simply subscribe to the event as you normally do.
+```python
+def initialize(self):
+    """Setup event listeners."""
+    self.add_event("contacts-skill:delete_contact", self.handle_delete_contact_event)
+    self.add_event("contacts-skill:get_contacts", self.handle_get_contacts_event)
+```
+
 ## More documentation to come
