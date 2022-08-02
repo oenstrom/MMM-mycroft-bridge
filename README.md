@@ -36,25 +36,10 @@ A possible configuration could be:
 | `fadeTime`    | `500`                        | Time in ms it takes to fade the module |
 | `mycroftPath` | `"ws://localhost:8181/core"` | The path to Mycroft messagebus         |
 
-## Relay messages from Mycroft to your MagicMirror module
-In the following example I'm relaying to the module `MMM-contacts` with the notification `LIST-ALL`. The data I'm sending is a list of contacts.
-
-`__init__.py` in Mycroft skill:
-```python
-self.bus.emit(Message("RELAY:MMM-contacts:LIST-ALL", {"contacts": contacts}))
-```
-The message type in `Message` needs to start with `RELAY`. The part between the colons is which MagicMirror to relay it to. Use `*` to send it to all modules. The last part is the notification, `LIST-ALL`. This is the notification that your module will receive.
-```js
-socketNotificationReceived: function (notification, payload) {
-    if (notification === "LIST-ALL") {
-      this.contacts = payload.contacts;
-      this.updateDom(0);
-    }
-}
-```
+The module will try to connect to Mycroft on the URL specified in `mycroftPath`. Once connected the module will emit to Mycroft that it has connected. You can subscribe to that event in any skill: `self.add_event("magicmirror.connected", self.handle_magicmirror_connected)`
 
 ## Status notifications
-The module currently sends two notifications about the connection status to mycroft:
+The module currently sends two notifications to all modules about Mycroft's connection status:
 - `MYCROFT_CONNECTED`
 - `MYCROFT_DISCONNECTED`
 
@@ -71,6 +56,23 @@ notificationReceived: function(notification, payload, sender) {
 }
 ```
 So, I wait for the `MYCROFT_CONNECTED` notification before sending the initial command to get the contacts.
+
+## Relay messages from Mycroft to your MagicMirror module
+In the following example I'm relaying to the module `MMM-contacts` with the notification `LIST-ALL`. The data I'm sending is a list of contacts.
+
+`__init__.py` in Mycroft skill:
+```python
+self.bus.emit(Message("RELAY:MMM-contacts:LIST-ALL", {"contacts": contacts}))
+```
+The message type in `Message` needs to start with `RELAY`. The part between the colons is which MagicMirror to relay it to. Use `*` to send it to all modules. The last part is the notification, `LIST-ALL`. This is the notification that your module will receive.
+```js
+socketNotificationReceived: function (notification, payload) {
+    if (notification === "LIST-ALL") {
+      this.contacts = payload.contacts;
+      this.updateDom(0);
+    }
+}
+```
 
 ## Sending data to Mycroft
 To send data from your module to Mycroft you must send a notification using `this.sendNotification(notification, payload)`. The `notification` has to be the string `MYCROFT_COMMAND` and the payload has to be an object containing the keys `eventName` and `data`.

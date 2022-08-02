@@ -77,6 +77,7 @@ module.exports = NodeHelper.create({
       console.log("MagicMirror connected to Mycroft messagebus");
       self.eventSetup();
       self.sendSocketNotification("MYCROFT_CONNECTED");
+      self.connection.send(`{"type": "magicmirror.connected"}`);
     });
 
     self.ws.on("connectFailed", error => {
