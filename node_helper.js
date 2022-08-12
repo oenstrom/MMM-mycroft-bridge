@@ -104,11 +104,10 @@ module.exports = NodeHelper.create({
       self.connection.send(`{"type": "magicmirror.connected"}`);
     });
 
-    self.Message.onEvent("speak", data =>
-      self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
-  
-    self.Message.onEvent("recognizer_loop:wakeword", _ =>
-      self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
+    self.Message.onEvent("MYCROFT_SHOW_NO_MESSAGES", () => self.sendSocketNotification("MYCROFT_SHOW_NO_MESSAGES"));
+    self.Message.onEvent("MYCROFT_RESTORE_HIDE",     () => self.sendSocketNotification("MYCROFT_RESTORE_HIDE"));
+    self.Message.onEvent("speak",                  data => self.sendSocketNotification("MYCROFT_MSG_SPEAK", {text: data.utterance, data: data}));
+    self.Message.onEvent("recognizer_loop:wakeword",  _ => self.sendSocketNotification("MYCROFT_MSG_WAKEWORD", {translate: "WAKEWORD"}));
   },
 
   /**

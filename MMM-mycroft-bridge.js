@@ -32,6 +32,7 @@ Module.register("MMM-mycroft-bridge", {
   
   start: function() {
     this.messages = [];
+    this.shouldHide = true;
     this.sendSocketNotification("INIT", {mycroftPath: this.config.mycroftPath, hideTime: this.config.hideTime});
   },
 
@@ -56,8 +57,17 @@ Module.register("MMM-mycroft-bridge", {
       case "MYCROFT_DISCONNECTED":
         self.sendNotification(notification);
         break;
+      case "MYCROFT_SHOW_NO_MESSAGES":
+        self.shouldHide = false;
+        break;
+      case "MYCROFT_RESTORE_HIDE":
+        self.shouldHide = true;
+        self.hide(self.config.fadeTime);
+        break;
       case "MYCROFT_HIDE":
-        this.hide(self.config.fadeTime);
+        if (self.shouldHide) {
+          this.hide(self.config.fadeTime);
+        }
         break;
 
       default: break;
@@ -88,6 +98,7 @@ Module.register("MMM-mycroft-bridge", {
     let ul = document.createElement("ul");
     ul.className = "messages";
     ul.style.height = this.messages.length < 3 ? "85px" : (this.messages.length*35) + "px";
+    ul.style.display = this.shouldHide ? "static" : "none";
     this.messages.forEach(msg => {
       let li = document.createElement("li");
       li.className = "normal dimmed";

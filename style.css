@@ -1,5 +1,14 @@
-.module.MMM-mycroft-bridge {
-  
+.module.MMM-mycroft-bridge .module-content {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+.module.MMM-mycroft-bridge .module-content > div {
+  margin-top: 60%;
+  text-align: center;
 }
 .module.MMM-mycroft-bridge .module-content .messages {
   list-style: none;
