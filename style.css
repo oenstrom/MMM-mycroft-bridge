@@ -1,3 +1,6 @@
+.module.MMM-mycroft-bridge {
+  pointer-events: none;
+}
 .module.MMM-mycroft-bridge .module-content {
   display: flex;
   position: absolute;
