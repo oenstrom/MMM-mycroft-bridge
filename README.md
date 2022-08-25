@@ -9,7 +9,8 @@ Navigate to the `modules` folder and clone the repository:
 `git clone git@github.com:oenstrom/MMM-mycroft-bridge.git`
 
 ## Dependencies
-`npm install websocket`
+- [Mycroft AI](https://mycroft.ai/)
+- `npm install websocket`
 
 ## Configuration
 
@@ -20,7 +21,7 @@ A possible configuration could be:
 ```js
 {
   module: "MMM-mycroft-bridge",
-  position: "lower_third",
+  position: "fullscreen_above",
   hiddenOnStartup: true,
   config: {
     maxMessages: 3,
